@@ -1,0 +1,5 @@
+* Anisotropic Elasticity
+
+Nearly all crystals are ansitropic in their elastic behaviours.  Crystalline defects, such as interstitials and dislocations, create elastic distortions in the crystals. Quite often, the materials are treated as elastically isotropic.  Such approximations may be insufficient in many cases.  The repository contains derivations and implementations of various methods related to anisotropic elasticity.
+
+
