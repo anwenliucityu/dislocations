@@ -26,7 +26,7 @@ pot_element        =   'Ti'
     All dislocation types for fcc metal:
 '''
 element_struct     =   'hcp'
-dislocation_type    =   'edge_a_basal'
+dislocation_type    =   'screw_a_basal'
 config_shape        =   ['cylinder', 'quadrupolar']
 config_style        =   config_shape[0]
 
@@ -35,9 +35,9 @@ config_style        =   config_shape[0]
     If config_style=='cylinder',    z is dislocation line direction, x is slip direction. 
     If config_style=='quadrupolar', x is dislocation line direction, y is slip direction.
 '''
-num_unit_cell_x     =   140
-num_unit_cell_y     =   135
-num_unit_cell_z     =   1
+num_unit_cell_x     =   10
+num_unit_cell_y     =   10
+num_unit_cell_z     =   10
 
 # information of dislocation
 '''

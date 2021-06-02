@@ -10,17 +10,17 @@ from default_path import pot_path
 #########################################
 
 # lammps in file data
-pot_element    =    'Ti'
-pot_type       =    'deepmd'
-in_pot         =    ['pair_style         deepmd frozen_model.pb',
-                     'pair_coeff', 
-                     'neighbor           2.0 bin']
-pot_path       =     [os.path.join(pot_path, 'potential/Ti/Ti_wenqi_2021/frozen_model.pb')]
+pot_element    =    'meam/spline'
+pot_type       =    'meam'
+in_pot         =    ['pair_style         meam/spline',
+                     'pair_coeff         * * Ti.meam.spline Ti', 
+                     'neighbor           0.3 bin']
+pot_path       =     [os.path.join(pot_path, 'potential/Ti/hennig_2008_prb/Ti.meam.spline')]
 
 # potential information
 pot_cutoff     =    8.4
 
 # information for slurm
-module_load    =    'module load lammps/20201029/aocc_openmpi_deepmd_api_znver2'
+module_load    =    'module load lammps/20210210/gcc_openmpi_znver2_openkim'
 appexe         =    'lmp'
 

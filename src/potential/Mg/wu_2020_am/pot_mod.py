@@ -10,16 +10,16 @@ from default_path import pot_path
 #########################################
 
 # lammps in file data
-pot_element    =    'Al'
-pot_type       =    'eam'
-in_pot         =    ['pair_style         eam/alloy',
-                     'pair_coeff         * * Al99.eam.alloy Al', 
-                     'neighbor           0.3 bin',
-                     'neigh_modify       delay 10']
-pot_path       =     [os.path.join(pot_path, 'potential/Al/mishin_1999_prb/Al99.eam.alloy')]
+pot_element    =    'Mg'
+pot_type       =    'meam/c'
+in_pot         =    ['pair_style         meam/c',
+                     'pair_coeff         * * library.meam Mg Mg.meam Mg',
+                     'neighbor           0.3 bin']
+pot_path       =     [os.path.join(pot_path, 'potential/Mg/wu_2021_am/library.meam'),
+                      os.path.join(pot_path, 'potential/Mg/wu_2021_am/Mg.meam')]
 
 # potential information
-pot_cutoff     =    8.0
+pot_cutoff     =    8.4
 
 # information for slurm
 module_load    =    'module load lammps/gcc_openmpi_zen2'

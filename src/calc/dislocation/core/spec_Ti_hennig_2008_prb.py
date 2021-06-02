@@ -5,8 +5,8 @@
 ##########################################################
 
 # information of potential
-pot_id             =   'mishin_1999_prb'
-pot_element        =   'Al'
+pot_id             =   'hennig_2008_prb'
+pot_element        =   'Ti'
 
 # information of material
 '''
@@ -25,7 +25,7 @@ pot_element        =   'Al'
         --- mixed <c+a> pyrI
     All dislocation types for fcc metal:
 '''
-element_struct     =    'fcc'
+element_struct     =    'bcc'
 dislocation_type    =   'screw'
 config_shape        =   ['cylinder', 'quadrupolar']
 config_style        =   config_shape[0]
@@ -35,9 +35,9 @@ config_style        =   config_shape[0]
     If config_style=='cylinder',    z is dislocation line direction, x is slip direction.
     If config_style=='quadrupolar', x is dislocation line direction, y is slip direction.
 '''
-num_unit_cell_x     =   70
-num_unit_cell_y     =   40
-num_unit_cell_z     =   1
+num_unit_cell_x     =   5#45
+num_unit_cell_y     =   5#80
+num_unit_cell_z     =   5#1
 
 # information of dislocation
 '''
@@ -58,9 +58,9 @@ boundary_freeze_width =   3.0
                 --- temp:         the temperature heated to help find global minimized structure. (Default=300K)
                 --- cooling_rate: running_steps needed to cool every 1K  (Default=500)
 '''
-start_temperature   =   0
+start_temperature   =   800
 simulations         =   ['energy_minimization', 'metastable', 'finite_T']
-simulation_type     =   simulations[0]
+simulation_type     =   simulations[2]
 
 if simulation_type =='energy_minimization':
     global_emin         =   False
@@ -73,7 +73,7 @@ if simulation_type =='metastable':
     dump_interval       =   100
 
 if simulation_type =='finite_T':
-    running_steps       =   1000000
+    running_steps       =   100000
     dump_interval       =   5
     spring_factor_k     =   1.5
 
@@ -107,10 +107,4 @@ sbatch_job          =   False
 calc_aniso_stress   =   False
 calc_atomic_stress  =   False
 output_perfect      =   True
-ovito               =   True
-
-#----------------------------------------
-# Plot DD plot and Nye tensor
-#----------------------------------------
-
-
+ovito               =   False
