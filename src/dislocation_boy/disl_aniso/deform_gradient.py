@@ -60,7 +60,7 @@ def deform_atom_coor(deform_grad, atom_coor):
         atom_coor[i,:] = np.dot(deform_grad, atom_coor[i,:])
     return atom_coor
 
-def deform_box_boundary(deform_grad, box_boundary):
+def deform_box_boundary(deform_grad, box_boundary, tilt):
     xlo, xhi = box_boundary[0]
     ylo, yhi = box_boundary[1]
     zlo, zhi = box_boundary[2]
@@ -70,17 +70,16 @@ def deform_box_boundary(deform_grad, box_boundary):
     new_x = np.dot(deform_grad, x)
     new_y = np.dot(deform_grad, y)
     new_z = np.dot(deform_grad, z)
-    new_boundary = [[0, new_x[0]],
-                    [-new_y[1]/2, new_y[1]/2],
-                    [-new_z[2]/2, new_z[2]/2]]
+    new_boundary = [[xlo, xlo+new_x[0]],
+                    [ylo, ylo+new_y[1]],
+                    [zlo, zlo+new_z[2]]]
     if new_y[0] == 0:
         new_y[0] = 0.
     if new_z[0] == 0:
         new_z[0] = 0.
     if new_z[1] == 0:
-        new_z[1] = 0
-    tilt_para = [new_y[0], new_z[0], new_z[1]]
-    print(tilt_para)
+        new_z[1] = 0.
+    tilt_para = [new_y[0]+tilt[0], new_z[0]+tilt[1], new_z[1]+tilt[2]]
     return new_boundary, tilt_para
 
 def rotate_atom_coor(atom_coor, rotation_matrix):

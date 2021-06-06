@@ -39,7 +39,7 @@ def aniso_disl_constructor(main_path, config_style, dislocation_type,
                 perfect_hcp_constructor(config, config_style, latt_const, pot_element, 
                         dislocation_type, unit_cell_size)
     if element_struct == 'fcc' or element_struct == 'bcc':
-        atom_coor, atom_type, box_boundary = perfect_cryst_constructor(config, config_style,
+        atom_coor, atom_type, box_boundary, repeat_para = perfect_cryst_constructor(config, config_style,
                 element_struct, dislocation_type, latt_const, unit_cell_size,)
         frame_new = config["frame_new"]
   
@@ -52,8 +52,9 @@ def aniso_disl_constructor(main_path, config_style, dislocation_type,
     atom_index_selected = sample_region.cylinder_z(atom_coor, sample_center, sample_radius, 'out')
     
     # delete the selected atoms
-    atom_coor = np.delete(atom_coor, atom_index_selected, 0)
-    atom_type = np.delete(atom_type, atom_index_selected)
+    if True:
+    	atom_coor = np.delete(atom_coor, atom_index_selected, 0)
+    	atom_type = np.delete(atom_type, atom_index_selected)
   
     # write perfect configuration for dislocation analysis 
     if output_perfect == True:
@@ -77,10 +78,10 @@ def aniso_disl_constructor(main_path, config_style, dislocation_type,
     # dislocation parameter
     frame_crystal = config["frame_initial"]
     if element_struct == 'hcp':
-        disl_center, b_vector = initialize_disl_config(config, latt_const, element_struct, 
+        disl_center, b_vector = initialize_disl_config(config, config_style, latt_const, element_struct, 
                 frame_crystal, new_box_lattice_const, disl_center, repeat_para=repeat_para) 
     else:
-        disl_center, b_vector = initialize_disl_config(config, latt_const, element_struct,
+        disl_center, b_vector = initialize_disl_config(config, config_style, latt_const, element_struct,
                 frame_new, latt_const, disl_center) 
   
     # calculate s_theta, q_theta, S, Q, B, S_theta, Q_theta
@@ -123,13 +124,16 @@ def aniso_disl_constructor(main_path, config_style, dislocation_type,
   
     if simulation_type == 'energy_minimization':
         write_in_file(pot_path, config_style, directory, element_struct, latt_const, pot_element, dislocation_type, in_pot, pot_type,
-                  mass, shell_radius, sample_center, disl_center, calc_atomic_stress=calc_atomic_stress, global_emin=global_emin,temp=temp,
+                  mass, sample_center, disl_center, calc_atomic_stress=calc_atomic_stress, global_emin=global_emin,temp=temp, shell_radius = shell_radius,
                   cooling_rate=cooling_rate)
     if simulation_type == 'metastable' or simulation_type == 'finite_T':
         write_in_finite_T_meta_file(pot_path, directory, element_struct, latt_const, pot_element, dislocation_type, in_pot, pot_type,
-                  mass, shell_radius, sample_center, disl_center, simulation_type, start_temp, 
+                  mass, sample_center, disl_center, simulation_type, start_temp, config_style,
                   spring_factor_k=spring_factor_k, running_steps=running_steps, 
-                  dump_interval=dump_interval, calc_atomic_stress=False, temp = temp)
+                  dump_interval=dump_interval, calc_atomic_stress=False, temp = temp, shell_radius = shell_radius,)
+        if simulation_type == 'metastable':
+            write_emin_py(directory, config_style, mass, in_pot, mem, 
+                          partition, module_load, appexe, pot_path, pot_name)
 
   
     # write job.sh file for submitting job

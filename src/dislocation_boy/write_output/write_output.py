@@ -9,8 +9,8 @@ def output_dir(main_path, pot_element, pot_name, element_struct, config_style, d
     box  = str(unit_cell_size[0])+'_'+str(unit_cell_size[1])+'_'+ str(unit_cell_size[2])
     dir = os.path.join(main_path, pot_element, pot_name, simulation_type, element_struct, config_style, dislocation_type)
                  # e.g. main/Ti/Ti_kevin_2020/energy_minimization/hcp/cylinder/screw_a_basal/
-    if config_style == 'quadrupolar':
-        global_emin = False
+    #if config_style == 'quadrupolar':
+     #   global_emin = False
     if simulation_type == 'energy_minimization':
         if global_emin == True:
             dir = os.path.join(dir, T+'_'+temp+'_'+T,)
@@ -88,7 +88,8 @@ def write_cfg_auxiliary(atom_coor, pot_element, dislocation_type, mass, box_boun
     file.close()
  
     
-def write_datafile(pot_element, dislocation_type, mass, directory, atom_coor, atom_type, box_boundary, suffix='_disl.dat'):
+def write_datafile(pot_element, dislocation_type, mass, directory, atom_coor, atom_type, box_boundary, 
+                   suffix='_disl.dat', tilt_para=[0,0,0]):
     '''write datafile'''
 
     num_atom = atom_coor.shape[0]
@@ -106,8 +107,11 @@ def write_datafile(pot_element, dislocation_type, mass, directory, atom_coor, at
                f"{num_type} atom types\n"
                f"{box_boundary[0][0]:>28.20f} {box_boundary[0][1]:>28.20f} xlo xhi\n"
                f"{box_boundary[1][0]:>28.20f} {box_boundary[1][1]:>28.20f} ylo yhi\n"
-               f"{box_boundary[2][0]:>28.20f} {box_boundary[2][1]:>28.20f} zlo zhi\n\n")
-
+               f"{box_boundary[2][0]:>28.20f} {box_boundary[2][1]:>28.20f} zlo zhi\n")
+    if tilt_para == [0,0,0]:
+        file.write("\n")
+    else:
+        file.write(f"{tilt_para[0]:>28.20f} {tilt_para[1]:>28.20f} {tilt_para[2]} xy xz yz\n\n")
     
     file.write("Masses\n\n")
     for each_type in type_list:
@@ -122,8 +126,8 @@ def write_datafile(pot_element, dislocation_type, mass, directory, atom_coor, at
     file.close()
     
 def write_in_file(pot_path, config_style, directory, element_struct, latt_const, pot_element, dislocation_type, in_pot, pot_type, 
-                  mass, shell_radius, sample_center, disl_center, calc_atomic_stress=False, global_emin=False, temp = 300.0,
-                  cooling_rate=500):
+                  mass, sample_center, disl_center, calc_atomic_stress=False, global_emin=False, temp = 300.0,
+                  cooling_rate=500, shell_radius=None):
   
     if element_struct == 'fcc' :
         atom_vol = str(latt_const**3/4/100000)
@@ -148,13 +152,16 @@ def write_in_file(pot_path, config_style, directory, element_struct, latt_const,
                "#----------------------------------------#\n")
     file.write(f"clear\n"
                 "units         metal\n"
-                "dimension     3\n"
-                "boundary      f f p\n"
-                "atom_style    atomic\n"
+                "dimension     3\n")
+    if config_style == 'quadrupolar':
+        file.write("boundary      p p p\n")
+    else:
+        file.write("boundary      f f p\n")
+    file.write("atom_style    atomic\n"
                 "atom_modify   map array\n"
                f"read_data     {case_name}_disl.dat\n"
-               f"mass          1 {mass}\n\n") 
-    
+               f"mass          1 {mass}\n\n")
+
     file.write("#----------------------------------------#\n"
                "#---            potential             ---#\n"
                "#----------------------------------------#\n")
@@ -182,13 +189,17 @@ def write_in_file(pot_path, config_style, directory, element_struct, latt_const,
         file.write("compute        freeatomtemp all temp\n"
                    "thermo         20\n"
                    "thermo_style   custom step pe lx ly lz press c_freeatomtemp\n"
-                  f"velocity       free_atom create {temp} 4928459 rot yes dist gaussian\n"
-                  f"fix            warm free_atom nvt temp {temp} {temp} 0.1\n"
-                  f"run            2000\n"
-                   "unfix          warm\n"
-                  f"fix            cooling free_atom nvt temp {temp} 0.1 0.1\n"
-                  f"run            {running_step}\n"
-                   "unfix          cooling\n\n")
+                  f"velocity       all create {temp} 4928459 rot yes dist gaussian\n")
+    if config_style == 'quadrupolar':
+        file.write(f"fix            warm all nvt temp {temp} {temp} 0.1\n")
+    else:
+        file.write(f"fix            warm free_atom nvt temp {temp} {temp} 0.1\n")
+    file.write(f"run            2000\n"
+                "unfix          warm\n"
+               f"fix            warm all nvt temp {temp} {temp} 0.1\n"
+               f"fix            cooling all nvt temp {temp} 0.1 0.1\n"
+               f"run            {running_step}\n"
+                "unfix          cooling\n\n")
     
     if calc_atomic_stress == True:
         calc = "_* mass type x y z v_s11 v_s22 v_s33 v_s12 v_s13 v_s23\n"
@@ -214,15 +225,15 @@ def write_in_file(pot_path, config_style, directory, element_struct, latt_const,
                "#---         energy minimization      ---#\n"
                "#----------------------------------------#\n"
                "min_style cg\n"
-               "minimize 1e-25 1e-25 5000 10000\n\n"
+               "minimize 0 1e-12 2000 10000\n\n"
                "print"' "'"All done"'"' )
   
     file.close()
 
 
 def write_in_finite_T_meta_file(pot_path, directory, element_struct, latt_const, pot_element, dislocation_type, in_pot, pot_type,
-                  mass, shell_radius, sample_center, disl_center, simulation_type, start_temp,
-                  spring_factor_k = None,
+                  mass, sample_center, disl_center, simulation_type, start_temp, config_style,
+                  spring_factor_k = None, shell_radius = None,
                   running_steps=None, dump_interval=None, calc_atomic_stress=False, temp = 300.0):
 
     if element_struct == 'fcc' :
@@ -248,9 +259,12 @@ def write_in_finite_T_meta_file(pot_path, directory, element_struct, latt_const,
                "#----------------------------------------#\n")
     file.write(f"clear\n"
                 "units         metal\n"
-                "dimension     3\n"
-                "boundary      f f p\n"
-                "atom_style    atomic\n"
+                "dimension     3\n")
+    if config_style == 'quadrupolar':
+        file.write("boundary      p p p\n")
+    else:
+        file.write("boundary      f f p\n")
+    file.write("atom_style    atomic\n"
                 "atom_modify   map array\n"
                f"read_data     {case_name}_disl.dat\n"
                f"mass          1 {mass}\n\n")
@@ -262,32 +276,35 @@ def write_in_finite_T_meta_file(pot_path, directory, element_struct, latt_const,
     for i in range(len(in_pot)):
         file.write(f"{in_pot[i]}\n")
 
-    file.write("\n"
-               "#----------------------------------------#\n"
-               "#---     freeze atoms in boundary     ---#\n"
-               "#----------------------------------------#\n")
+    if config_style != 'quadrupolar':
+        file.write("\n"
+                   "#----------------------------------------#\n"
+                   "#---     freeze atoms in boundary     ---#\n"
+                   "#----------------------------------------#\n")
 
-    file.write(f"region    inner cylinder z {sample_center[0]} {sample_center[1]} {shell_radius} EDGE EDGE\n"
-                "group     free_atom region inner\n"
-                "group     freeze_atom subtract all free_atom\n")
-    if simulation_type == 'metastable':
-        file.write("fix       freeze_boundary freeze_atom setforce 0.0 0.0 0.0\n"
-                   "shell     cd dump_file\n\n")
-    if simulation_type == 'finite_T':
-        temp = start_temp
-        file.write(f"fix       freeze_boundary freeze_atom spring/self {spring_factor_k}\n"
-                    "shell     cd dump_file\n\n")
+        file.write(f"region    inner cylinder z {sample_center[0]} {sample_center[1]} {shell_radius} EDGE EDGE\n"
+                    "group     free_atom region inner\n"
+                    "group     freeze_atom subtract all free_atom\n")
+        if simulation_type == 'metastable':
+            file.write("fix       freeze_boundary freeze_atom setforce 0.0 0.0 0.0\n")
+        if simulation_type == 'finite_T':
+            temp = start_temp
+            file.write(f"fix       freeze_boundary freeze_atom spring/self {spring_factor_k}\n")
 
+    file.write("shell     cd dump_file\n\n")
     file.write("#----------------------------------------#\n"
                "#---          add temperature         ---#\n"
                "#----------------------------------------#\n")                                                                                
     file.write("compute        freeatomtemp all temp\n"
                "thermo         100\n"
                "thermo_style   custom step pe lx ly lz press c_freeatomtemp\n"
-              f"velocity       free_atom create {temp} 4928459 rot yes dist gaussian\n"
-              f"fix            warm free_atom nvt temp {temp} {temp} 0.1\n"
-              f"run            3000\n"
-               "reset_timesetp 0\n\n")
+              f"velocity       all create {temp} 4928459 rot yes dist gaussian\n")
+    if config_style == 'quadrupolar':
+        file.write(f"fix            warm all nvt temp {temp} {temp} 0.1\n")
+    else:
+        file.write(f"fix            warm free_atom nvt temp {temp} {temp} 0.1\n")
+    file.write(f"run            2000\n"
+               "reset_timestep 0\n\n")
 
     if calc_atomic_stress == True:
         calc = "_* mass type x y z v_s11 v_s22 v_s33 v_s12 v_s13 v_s23\n"
@@ -309,8 +326,14 @@ def write_in_finite_T_meta_file(pot_path, directory, element_struct, latt_const,
                 "thermo         200\n"
                 "thermo_style   custom step pe lx ly lz press\n"
                f"run            {running_steps}\n\n")
+    if simulation_type == 'metastable':
+        file.write("#----------------------------------------#\n"
+                   "#---     emin for mestable core       ---#\n"
+                   "#----------------------------------------#\n")
+        file.write('shell           cd ..\n')
+        file.write('python          emin.py\n')
 
-    file.write("print"' "'"All done"'"' )
+    file.write("print" '"'"All done"'"' )
   
     file.close()
 
@@ -342,7 +365,9 @@ def write_job(pot_element, dislocation_type, partition, mem, module_load, appexe
                 "# import some basic util func\n"
                 ". $HOME/template/shell/bash/bash_script_home\n"
                 ". $HOME/template/shell/bash/sys_util\n\n"
-                "export OMP_NUM_THREADS=$'{'SLURM_CPUS_PER_TASK'}'\n"
+                "export OMP_NUM_THREADS=1\n"
+                "export TF_NUM_INTEROP_THREADS=1\n"
+                "export TF_NUM_INTRAOP_THREADS=1\n"
                 )
 
     file.write(f"ulimit -s unlimited\n\n"
@@ -354,4 +379,113 @@ def write_job(pot_element, dislocation_type, partition, mem, module_load, appexe
                 "mpirun -np $SLURM_NTASKS $appexe -in $input_file -log $log_file > $output_file\n")
     file.close()
     
-    
+def write_emin_py(directory, config_style, mass, in_pot, mem, partition, module_load, appexe, pot_path, pot_name, core_num=4):
+    dump_path = os.path.join(directory, 'dump_file')
+    file_num, files_path = fileprocess(dump_path)
+    write_emin_path = directory
+    dat_file = '{file_name}'
+    line = r'\n'
+    file = open(os.path.join(directory, 'emin.py'), 'w')
+    file.write('import os\n'
+               'import atomman as am\n\n'
+               'def init_emin(dump_file):\n'
+               '    __, file_name = os.path.split(dump_file)\n'
+               '    dat_file_path = os.path.abspath(os.path.join(dump_file,'" '"'../../emin'"'"', file_name))\n'
+               '    if not os.path.isdir(dat_file_path):\n'
+               '        os.makedirs(dat_file_path)\n'
+               '    sys = am.load('"'"'atom_dump'"'"', dump_file)\n'
+               '    write_data = sys.dump('"'"'atom_data'"', "'f=os.path.join(dat_file_path,file_name+'"'"'.dat'"'))\n"
+               '    ini_path = os.getcwd()\n'
+               '    os.chdir(dat_file_path)\n'
+              f'    pot_path = {pot_path}\n'
+              f'    pot_name =' '"' f'{pot_name}' '"' '\n'
+               '    for i in range(len(pot_path)):\n'
+               '        pot_name = os.path.basename(pot_path[i])\n'
+               '        os.system(f"ln -s {pot_path[i]} {pot_name}")\n'
+               '    os.chdir(ini_path)\n'
+               '    file = open(dat_file_path+'"'"'/in.lammps'"', "'"w"'")\n"
+              f'    file.write("#----------------------------------------#{line}"\n'
+              f'               "#---   basic info & initialization    ---#{line}"\n'
+              f'               "#----------------------------------------#{line}")\n'
+              f'    file.write(f"clear{line}"\n'
+              f'                "units         metal{line}"\n'
+              f'                "dimension     3{line}"\n')
+    if config_style == 'quadrupolar':
+        file.write(f'                "boundary      p p p{line}")\n')
+    else:
+        file.write(f'                "boundary      f f p{line}")\n')
+    file.write(f'    file.write("atom_style    atomic{line}"\n'
+               f'               "atom_modify   map array{line}"\n'
+               f'              f"read_data     {dat_file}.dat{line}"\n'
+               f'               "mass          1 {mass}{line}{line}")\n'
+               f'    file.write("#----------------------------------------#{line}"\n'
+               f'               "#---            potential             ---#{line}"\n'
+               f'               "#----------------------------------------#{line}")\n')
+    for i in range(len(in_pot)):
+        file.write(f'    file.write(f"{in_pot[i]}{line}")\n')
+    file.write(f'    file.write("{line}")\n')
+    file.write(f'    file.write("#----------------------------------------#{line}"\n'
+               f'               "#---           emin and dump          ---#{line}"\n'
+               f'               "#----------------------------------------#{line}"\n'
+               f'               "min_style cg{line}"\n'
+               f'               "minimize 0 1e-12 2000 10000{line}"\n'
+               f'               "shell           cd ..{line}"\n'
+               f'               "shell           mkdir emin{line}"\n'
+               f'               "shell           cd emin{line}"\n'
+               f'              f"dump            emin all custom 1 {dat_file}.emin mass type x y z{line}"\n'
+               f'               "run             0{line}{line}"\n'
+               f'               "print' f" 'All done'{line}"'")\n\n'
+               f'    file = open(dat_file_path+'"'"'/job.sh'"', "'"w"'")\n"
+               f'    file.write(f"#!/usr/bin/env bash{line}{line}"\n'
+               f'               f"#SBATCH --job-name='"'"f'emin'f"'{line}" '"\n'
+               f'               f"#SBATCH --partition={partition}{line}"\n'
+               f'                "#SBATCH --ntasks-per-core=1{line}"\n'
+               f'                "#SBATCH --ntasks={core_num}{line}"\n'
+               f'                "#SBATCH --nodes=1{line}"\n'
+               f'                "#SBATCH --cpus-per-task=1{line}"\n'
+               f'               f"#SBATCH --mem={mem}{line}"\n'
+               f'                "#SBATCH --error='"'j%j.stderr' "f'{line}"\n'
+               f'                "#SBATCH --output='"'j%j.stdout'"f'{line}{line}"\n'
+               f'                "# import some basic util func{line}"\n'
+               f'                ". $HOME/template/shell/bash/bash_script_home{line}"\n'
+               f'                ". $HOME/template/shell/bash/sys_util{line}{line}"\n'
+               f'                "export OMP_NUM_THREADS=1{line}"\n'
+               f'                "export TF_NUM_INTEROP_THREADS=1{line}"\n'
+               f'                "export TF_NUM_INTRAOP_THREADS=1{line}"\n'
+               f'                "ulimit -s unlimited{line}{line}"\n'
+               f'                "{module_load}{line}"\n'
+               f'                "appexe='f"'nice -n20 {appexe}'"f'{line}{line}"\n'
+               f'                "input_file=in.lammps{line}"\n'
+               f'                "output_file=$input_file.stdout{line}"\n'
+               f'                "log_file=$input_file.log{line}{line}"\n'
+               f'                "mpirun -np $SLURM_NTASKS $appexe -in $input_file -log $log_file > $output_file{line}")\n'
+               f'    return dat_file_path\n\n')
+
+    file.write(f'def fileprocess(path):\n'
+               '    filenames = []\n'
+               '    filenum = 0\n'
+               '    for lists in os.listdir(path):\n'
+               '        sub_path = os.path.join(path, lists)\n'
+               '        if os.path.isfile(sub_path):\n'
+               '            filenum = filenum+1\n'
+               '            filenames.append(sub_path)\n'
+               '    return filenum, filenames\n\n'
+               'if __name__ == "__main__":\n'
+               '    dump_path = "'f"{dump_path}"'"\n'
+               '    __, file_path = fileprocess(dump_path)\n'
+               '    for dump_file in file_path:\n'
+               '        dat_file_path = init_emin(dump_file)\n'
+               '        init_path = os.getcwd()\n'
+               '        os.chdir(dat_file_path)\n'
+               '        os.system("sbatch job.sh")\n'
+               '        os.chdir(init_path)\n')
+
+def fileprocess(path):
+    filenames = []
+    filenum = 0
+    for lists in os.listdir(path):
+        sub_path = os.path.join(path, lists)
+        if os.path.isfile(sub_path):
+            filenum = filenum+1
+            filenames.append(sub_path)
+    return filenum, filenames

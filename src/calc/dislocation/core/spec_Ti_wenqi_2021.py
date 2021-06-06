@@ -28,16 +28,16 @@ pot_element        =   'Ti'
 element_struct     =   'hcp'
 dislocation_type    =   'screw_a_basal'
 config_shape        =   ['cylinder', 'quadrupolar']
-config_style        =   config_shape[0]
+config_style        =   config_shape[1]
 
 # information of simulation box
 '''
     If config_style=='cylinder',    z is dislocation line direction, x is slip direction. 
     If config_style=='quadrupolar', x is dislocation line direction, y is slip direction.
 '''
-num_unit_cell_x     =   10
-num_unit_cell_y     =   10
-num_unit_cell_z     =   10
+num_unit_cell_x     =   1
+num_unit_cell_y     =   6
+num_unit_cell_z     =   8
 
 # information of dislocation
 '''
@@ -60,17 +60,17 @@ boundary_freeze_width =   3.0
 '''
 start_temperature   =   0
 simulations         =   ['energy_minimization', 'metastable', 'finite_T']
-simulation_type     =   simulations[0]
+simulation_type     =   simulations[1]
 
 if simulation_type =='energy_minimization':
     global_emin         =   True
-    temp                =   300
-    cooling_rate        =   500
+    temp                =   77
+    cooling_rate        =   20
 
 if simulation_type =='metastable':
     temp                =   300
-    running_steps       =   10000
-    dump_interval       =   100
+    running_steps       =   500000
+    dump_interval       =   1000
 
 if simulation_type =='finite_T':
     running_steps       =   10000
@@ -80,7 +80,7 @@ if simulation_type =='finite_T':
 #--------------------------------------
 # Define the job specs
 #--------------------------------------
-ncpu        =   32
+ncpu        =   12
 partition   =   'xlong'
 project     =   'default'
 mem         =   '48G'

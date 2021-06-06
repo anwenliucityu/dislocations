@@ -24,7 +24,7 @@ bcc_screw = {
     # new frame: [e1', e2', e3'], ei' are column vectors
     "frame_new"         : [[  -1.0,  -0.5,  1.0],
                            [   1.0,  -0.5,  1.0],
-                           [   0,   1.0,  1.0]],
+                           [   0,     1.0,  1.0]],
 }
 
 fcc_edge= {

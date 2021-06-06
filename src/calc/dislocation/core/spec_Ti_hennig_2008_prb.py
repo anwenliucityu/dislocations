@@ -28,16 +28,16 @@ pot_element        =   'Ti'
 element_struct     =    'bcc'
 dislocation_type    =   'screw'
 config_shape        =   ['cylinder', 'quadrupolar']
-config_style        =   config_shape[0]
+config_style        =   config_shape[1]
 
 # information of simulation box
 '''
     If config_style=='cylinder',    z is dislocation line direction, x is slip direction.
     If config_style=='quadrupolar', x is dislocation line direction, y is slip direction.
 '''
-num_unit_cell_x     =   5#45
-num_unit_cell_y     =   5#80
-num_unit_cell_z     =   5#1
+num_unit_cell_x     =   1#45
+num_unit_cell_y     =   15#80
+num_unit_cell_z     =   15#1
 
 # information of dislocation
 '''

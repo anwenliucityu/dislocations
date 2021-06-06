@@ -191,7 +191,7 @@ def perfect_hcp_constructor(config, elem_property):
     xy = box_num_cell[1]*repeat_para[1,0]
     xz = box_num_cell[2]*repeat_para[2,0]
     yz = box_num_cell[2]*repeat_para[2,1]
-    tilt = [xy,xz,yz]
+    #tilt = [xy,xz,yz]
     box_num_cell_x_lo = -(box_num_cell[0] // 2)
     box_num_cell_x_hi = box_num_cell[0] + box_num_cell_x_lo
     box_num_cell_y_lo = -(box_num_cell[1] // 2)
